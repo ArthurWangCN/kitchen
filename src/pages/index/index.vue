@@ -115,60 +115,43 @@ const cartTotal = computed(() => {
   return total.toFixed(2)
 })
 
-// 商品分类数据
-const categories = reactive([
-  {
-    id: 1,
-    name: '热销套餐',
-    goods: [
-      { id: 1, name: '香辣鸡腿堡套餐', price: 25.8, image: '/static/drink.jpg', desc: '香辣鸡腿堡+薯条+可乐' },
-      { id: 2, name: '双层牛肉堡套餐', price: 28.8, image: '/static/drink.jpg', desc: '双层牛肉堡+薯条+可乐' },
-      { id: 9, name: '鸡翅套餐', price: 22.8, image: '/static/drink.jpg' },
-      { id: 10, name: '巨无霸套餐', price: 32.8, image: '/static/drink.jpg' },
-      { id: 11, name: '麦辣鸡腿套餐', price: 26.8, image: '/static/drink.jpg' },
-      { id: 12, name: '鱼排套餐', price: 27.8, image: '/static/drink.jpg' }
-    ]
-  },
-  {
-    id: 2,
-    name: '主食',
-    goods: [
-      { id: 3, name: '香辣鸡腿堡', price: 15.8, image: '/static/drink.jpg' },
-      { id: 4, name: '双层牛肉堡', price: 18.8, image: '/static/drink.jpg' },
-      { id: 13, name: '培根芝士堡', price: 17.8, image: '/static/drink.jpg' },
-      { id: 14, name: '鳕鱼堡', price: 16.8, image: '/static/drink.jpg' },
-      { id: 15, name: '麦香鸡', price: 12.8, image: '/static/drink.jpg' },
-      { id: 16, name: '巨无霸', price: 21.8, image: '/static/drink.jpg' }
-    ]
-  },
-  {
-    id: 3,
-    name: '小吃',
-    goods: [
-      { id: 5, name: '薯条', price: 8.8, image: '/static/drink.jpg' },
-      { id: 6, name: '鸡块', price: 12.8, image: '/static/drink.jpg' },
-      { id: 17, name: '洋葱圈', price: 8.8, image: '/static/drink.jpg' },
-      { id: 18, name: '玉米杯', price: 7.8, image: '/static/drink.jpg' },
-      { id: 19, name: '麦乐鸡', price: 11.8, image: '/static/drink.jpg' },
-      { id: 20, name: '甜筒', price: 5.8, image: '/static/drink.jpg' }
-    ]
-  },
-  {
-    id: 4,
-    name: '饮料',
-    goods: [
-      { id: 7, name: '可乐', price: 5.8, image: '/static/drink.jpg' },
-      { id: 8, name: '雪碧', price: 5.8, image: '/static/drink.jpg' },
-      { id: 21, name: '橙汁', price: 6.8, image: '/static/drink.jpg' },
-      { id: 22, name: '奶茶', price: 8.8, image: '/static/drink.jpg' },
-      { id: 23, name: '咖啡', price: 9.8, image: '/static/drink.jpg' },
-      { id: 24, name: '柠檬水', price: 6.8, image: '/static/drink.jpg' }
-    ]
-  },
-])
-
-// 当前选中的分类索引
+// 当前选中的分类ID
 const currentCategory = ref(1)
+
+// 商品分类数据
+const categories = reactive<any[]>([])
+const loading = ref(true)
+const error = ref('')
+
+// 获取商品分类数据
+const fetchCategories = async () => {
+  try {
+    loading.value = true
+    error.value = ''
+    const { data } = await uni.request({
+      url: 'https://mock.mengxuegu.com/mock/67db7a1db3f51e45c0f7c09c/example/goods',
+      method: 'GET'
+    })
+    if (data?.code === 200) {
+      categories.push(...data?.data)
+      setTimeout(() => {
+        getCategoryTops()
+      }, 100)
+    } else {
+      error.value = data?.message || '获取商品分类失败'
+    }
+
+  } catch (err: any) {
+    error.value = err.message || '网络请求失败'
+  } finally {
+    loading.value = false
+  }
+}
+
+// 在组件挂载后获取分类数据
+onMounted(() => {
+  fetchCategories()
+})
 
 // 购物车弹窗显示状态
 const showCartPopup = ref(false)
@@ -352,6 +335,7 @@ const removeFromCart = (goodsId: number) => {
   border-radius: 16rpx;
   margin-bottom: 20rpx;
 }
+
 .goods-item:last-child {
   margin-bottom: 100rpx;
 }
